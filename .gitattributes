@@ -44,4 +44,3 @@ Dockerfile text eol=lf
 *.ckpt binary
 *.pb binary
 *.onnx binary
-
