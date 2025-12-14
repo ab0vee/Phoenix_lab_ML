@@ -1,0 +1,43 @@
+# Core dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.12.5
+pydantic-settings==2.12.0
+
+# ML/AI
+transformers==4.36.0
+# torch - install separately: pip install torch --index-url https://download.pytorch.org/whl/cpu
+sentence-transformers==2.3.1
+# sentencepiece==0.1.99  # Требует компилятор C++ на Windows
+# Для Windows: pip install sentencepiece --only-binary :all:
+# Или используйте Docker, где все уже установлено
+sentencepiece>=0.1.99; sys_platform != "win32"
+
+# Data processing
+numpy==1.26.2
+
+# HTTP/Content extraction
+aiohttp==3.9.1
+readability-lxml==0.8.1
+trafilatura==1.6.2
+newspaper4k==0.9.4.1
+lxml==5.2.0
+# gazeta==1.0.1  # Не доступен в PyPI, используем trafilatura и newspaper4k
+
+# Database (optional, comment out if not using)
+# psycopg2-binary==2.9.9
+
+# Cache (optional)
+# redis==5.0.1
+
+# HuggingFace
+huggingface-hub==0.20.1
+protobuf>=4.21.0  # Required for some transformers models
+
+# Utilities
+python-dotenv==1.0.0
+scikit-learn==1.4.0
+langdetect==1.0.9  # Определение языка текста
+
+# HTTP client
+httpx==0.25.2

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Phoenix LAB ML Service API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #fff;
+        }
+        .endpoint {
+            background: #2d2d2d;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #005a9e;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            background: #3d3d3d;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+        .result {
+            background: #252525;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        h2 {
+            color: #4ec9b0;
+        }
+        .link {
+            color: #4ec9b0;
+            text-decoration: none;
+        }
+        .link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тестирование Phoenix LAB ML Service API</h1>
+    
+    <p>
+        <strong>Важно:</strong> В браузере нельзя напрямую открыть POST endpoints.
+        Используйте эту страницу или <a href="/docs" class="link">Swagger UI</a> для тестирования.
+    </p>
+
+    <div class="endpoint">
+        <h2>1. Health Check</h2>
+        <button onclick="testHealth()">Проверить /health</button>
+        <div id="healthResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="endpoint">
+        <h2>2. Paraphrase (Парафразирование)</h2>
+        <textarea id="paraphraseText" placeholder="Введите текст для парафразирования..." rows="3">Сегодня хорошая погода</textarea>
+        <button onclick="testParaphrase()">Парафразировать</button>
+        <div id="paraphraseResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="endpoint">
+        <h2>3. Summarize (Суммаризация)</h2>
+        <textarea id="summarizeText" placeholder="Введите длинный текст для суммаризации..." rows="5">Сегодня произошло важное событие в мире технологий. Компания объявила о выпуске нового продукта, который изменит индустрию. Эксперты считают, что это революционное решение.</textarea>
+        <button onclick="testSummarize()">Суммаризировать</button>
+        <div id="summarizeResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="endpoint">
+        <h2>4. Process (Полная обработка)</h2>
+        <input type="text" id="processUrl" placeholder="URL новости (опционально)">
+        <textarea id="processText" placeholder="Или введите текст новости..." rows="3"></textarea>
+        <button onclick="testProcess()">Обработать</button>
+        <div id="processResult" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        async function testHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                document.getElementById('healthResult').style.display = 'block';
+                document.getElementById('healthResult').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('healthResult').style.display = 'block';
+                document.getElementById('healthResult').textContent = 'Ошибка: ' + error.message;
+            }
+        }
+
+        async function testParaphrase() {
+            const text = document.getElementById('paraphraseText').value;
+            if (!text) {
+                alert('Введите текст!');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/v1/paraphrase', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        temperature: 0.7
+                    })
+                });
+                const data = await response.json();
+                document.getElementById('paraphraseResult').style.display = 'block';
+                document.getElementById('paraphraseResult').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('paraphraseResult').style.display = 'block';
+                document.getElementById('paraphraseResult').textContent = 'Ошибка: ' + error.message;
+            }
+        }
+
+        async function testSummarize() {
+            const text = document.getElementById('summarizeText').value;
+            if (!text) {
+                alert('Введите текст!');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/v1/summarize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text
+                    })
+                });
+                const data = await response.json();
+                document.getElementById('summarizeResult').style.display = 'block';
+                document.getElementById('summarizeResult').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('summarizeResult').style.display = 'block';
+                document.getElementById('summarizeResult').textContent = 'Ошибка: ' + error.message;
+            }
+        }
+
+        async function testProcess() {
+            const url = document.getElementById('processUrl').value;
+            const text = document.getElementById('processText').value;
+            
+            if (!url && !text) {
+                alert('Введите URL или текст!');
+                return;
+            }
+            
+            try {
+                const body = {};
+                if (url) body.url = url;
+                if (text) body.text = text;
+                
+                const response = await fetch('/api/v1/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body)
+                });
+                const data = await response.json();
+                document.getElementById('processResult').style.display = 'block';
+                document.getElementById('processResult').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('processResult').style.display = 'block';
+                document.getElementById('processResult').textContent = 'Ошибка: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
+
+

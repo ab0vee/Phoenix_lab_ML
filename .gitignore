@@ -1,0 +1,87 @@
+# Hugging Face models cache and datasets (do not commit large weights)
+models_cache/
+datasets/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Service-specific env files (may contain secrets)
+backend/rewrite_service/*.env
+backend/telegram_bot/auth_tokens.json
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Node.js
+node_modules/
+.next/
+out/
+dist/
+
+# Docker
+.dockerignore
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# PyTorch
+*.pth
+*.pt
+*.pkl
+*.pickle
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Large files that should not be committed
+*.bin
+*.safetensors
+*.h5
+*.ckpt
+*.pb
+*.onnx
+
+# Model files (already covered by models_cache/, but explicit)
+**/pytorch_model.bin
+**/model.safetensors
+**/model.pt
+**/*.bin
+**/*.safetensors
+

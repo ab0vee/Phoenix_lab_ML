@@ -1,0 +1,187 @@
+# ============================================
+# Phoenix LAB - Docker Compose
+# ============================================
+# Ссылочный сборщик сервисов по путям к Dockerfile'ам
+# ============================================
+
+services:
+  # ML Service (FastAPI)
+  ml_service:
+    build:
+      context: ./backend/ml_service
+      dockerfile: Dockerfile
+    container_name: phoenix_ml_service
+    ports:
+      - "8000:8000"
+    volumes:
+      - ml_models_cache:/app/models_cache
+      - ml_models_cache:/root/.cache/huggingface  # Монтируем кэш Hugging Face в наш volume
+    environment:
+      - ML_MODEL_CACHE_DIR=/app/models_cache
+      - HF_HOME=/app/models_cache  # Указываем Hugging Face использовать наш кэш
+      - TRANSFORMERS_CACHE=/app/models_cache  # Альтернативная переменная для transformers
+      - HF_DATASETS_CACHE=/app/models_cache  # Кэш для datasets
+      - AUTO_DOWNLOAD_MODELS=true
+      - PRELOAD_MODELS=false
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - ML_DEVICE=cpu
+      - PARAPHRASE_MODEL_RU=cointegrated/rut5-base-paraphraser
+      - PARAPHRASE_MODEL_EN=google/flan-t5-large
+      - SUMMARY_MODEL_RU=IlyaGusev/mbart_ru_sum_gazeta
+      - SUMMARY_MODEL_EN=facebook/bart-large-cnn
+      - API_KEY=${API_KEY:-your-api-key-here}  # API ключ для ML Service
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+        reservations:
+          memory: 4G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 1200s
+    networks:
+      - phoenix_network
+
+  # Rewrite Service (Flask)
+  rewrite_service:
+    build:
+      context: ./backend/rewrite_service
+      dockerfile: Dockerfile
+    container_name: phoenix_rewrite_service
+    ports:
+      - "5000:5000"
+    volumes:
+      - rewrite_uploads:/app/uploads
+      - ./backend/rewrite_service/openrouter.env:/app/openrouter.env:ro
+      - ./backend/rewrite_service/yandex.env:/app/yandex.env:ro
+      - ./backend/database:/backend/database:ro
+      - ./backend/telegram_bot/channels.json:/app/backend/telegram_bot/channels.json:rw
+      - ./backend/telegram_bot/auth_tokens.json:/app/backend/telegram_bot/auth_tokens.json:rw
+    environment:
+      - PORT=5000
+      - API_URL=http://rewrite_service:5000
+      - ML_SERVICE_URL=http://ml_service:8000
+      - DATABASE_URL=postgresql://phoenix_user:phoenix_password@postgres:5432/phoenix_lab
+      - API_KEY=${API_KEY:-your-api-key-here}  # API ключ для ML Service (должен совпадать с ml_service)
+      # Переменные из .env файлов будут загружены автоматически (опционально)
+    env_file:
+      - .env
+    # env_file опционален - если файлов нет, используются значения по умолчанию
+    depends_on:
+      - ml_service
+      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - phoenix_network
+
+  # Telegram Bot
+  telegram_bot:
+    build:
+      context: ./backend/telegram_bot
+      dockerfile: Dockerfile
+    container_name: phoenix_telegram_bot
+    volumes:
+      - telegram_bot_data:/app/data
+      - ./backend/telegram_bot/channels.json:/app/channels.json
+      - ./backend/telegram_bot/auth_tokens.json:/app/auth_tokens.json
+    environment:
+      - API_URL=http://rewrite_service:5000
+    env_file:
+      - .env
+    # env_file опционален - если файлов нет, бот не запустится (но другие сервисы будут работать)
+    depends_on:
+      - rewrite_service
+    restart: unless-stopped
+    networks:
+      - phoenix_network
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:5000  # Браузер обращается снаружи Docker
+        - NEXT_PUBLIC_ML_SERVICE_URL=http://localhost:8000  # Браузер обращается снаружи Docker
+    container_name: phoenix_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - rewrite_service
+      - ml_service
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - phoenix_network
+
+  # PostgreSQL (для БД)
+  postgres:
+    image: postgres:15-alpine
+    container_name: phoenix_postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=phoenix_user
+      - POSTGRES_PASSWORD=phoenix_password
+      - POSTGRES_DB=phoenix_lab
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U phoenix_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - phoenix_network
+
+  # Redis (для кэширования)
+  redis:
+    image: redis:7-alpine
+    container_name: phoenix_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - phoenix_network
+
+networks:
+  phoenix_network:
+    driver: bridge
+
+volumes:
+  ml_models_cache:
+    driver: local
+  rewrite_uploads:
+    driver: local
+  telegram_bot_data:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+

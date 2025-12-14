@@ -1,0 +1,30 @@
+# Упрощенные зависимости для Windows (без компиляции)
+# Используйте этот файл если возникают проблемы с компиляцией
+
+# Web Framework (уже установлены через pip install)
+# fastapi
+# uvicorn[standard]
+# pydantic (>=2.5.0)
+# pydantic-settings
+# python-multipart
+
+# HTTP Client
+httpx==0.25.2
+# aiohttp (установлен отдельно)
+
+# Content Extraction
+trafilatura==1.6.3
+readability-lxml==0.8.1
+beautifulsoup4==4.12.2
+# lxml (установлен отдельно через --only-binary)
+
+# Utilities
+python-dotenv==1.0.0
+langdetect==1.0.9
+
+# Logging
+structlog==23.2.0
+
+# Примечание: Для установки lxml и aiohttp используйте:
+# pip install lxml aiohttp --only-binary :all:
+

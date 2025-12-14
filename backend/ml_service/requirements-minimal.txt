@@ -1,0 +1,35 @@
+# Минимальные зависимости для запуска ML Service без БД
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic>=2.5.0  # Использовать последнюю версию с pre-built wheels для Python 3.13
+pydantic-settings>=2.1.0
+python-multipart==0.0.6
+
+# HTTP Client
+httpx==0.25.2
+aiohttp==3.9.1
+
+# Content Extraction
+trafilatura==1.6.3
+readability-lxml==0.8.1
+newspaper4k==0.9.4.1  # Опционально, trafilatura достаточно
+beautifulsoup4==4.12.2
+lxml==4.9.3
+# gazeta==1.0.1  # Не доступен в PyPI, используем trafilatura и newspaper4k
+
+# Utilities
+python-dotenv==1.0.0
+langdetect==1.0.9
+
+# Logging
+structlog==23.2.0
+
+# ML (опционально, для реальных моделей)
+# Для установки на Windows может потребоваться Visual C++ Build Tools
+# transformers==4.35.2
+# accelerate==0.25.0
+# sentencepiece==0.1.99  # Требует компилятор C++ на Windows
+# sentence-transformers==2.2.2
+# torch==2.1.1  # Большой размер, устанавливать отдельно при необходимости
+
